@@ -5,16 +5,16 @@ EditorBuildSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 2
   m_Scenes:
-  - enabled: 1
+  - enabled: 0
     path: Assets/DecoAR/Auth/Scenes/Auth.unity
     guid: b70e6d6da429594499804006f720e491
-  - enabled: 1
+  - enabled: 0
     path: Assets/DecoAR/Auth/Scenes/Profile.unity
     guid: be88701da1b126c45b8972840c0163d2
-  - enabled: 1
+  - enabled: 0
     path: Assets/DecoAR/M1_Player/Scenes/M1_Personnalisation.unity
     guid: c4a731d09a7d695419f79244bed27d53
-  - enabled: 1
+  - enabled: 0
     path: Assets/DecoAR/M1_Player/Scenes/M1_ScanVisage.unity
     guid: 365793d0198041740b76b66ee95992ca
   - enabled: 1
