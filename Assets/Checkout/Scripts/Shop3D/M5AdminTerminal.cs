@@ -46,7 +46,7 @@ namespace DecoAR.M5
         TMP_InputField field;
         Image checkCircle, checkIcon;
         float errorUntil, shake;
-        Vector2 pressPos; float pressTime; bool pressing, pressOverUI;
+        Vector2 pressPos, lastTouch; float pressTime; bool pressing, pressOverUI, touchPress;
 
         void OnEnable() => EnhancedTouchSupport.Enable();
 
@@ -92,19 +92,27 @@ namespace DecoAR.M5
 
         void DetectTap()
         {
-            Vector2 pos = default; bool down = false, any = false;
-            if (ETouch.activeTouches.Count > 0) { pos = ETouch.activeTouches[0].screenPosition; down = true; any = true; }
-            else if (Mouse.current != null) { pos = Mouse.current.position.ReadValue(); down = Mouse.current.leftButton.isPressed; any = true; }
-            if (!any) return;
+            if (!M5TouchTap.Read(ref touchPress, ref lastTouch, out var pos, out var down)) return;
             if (down && !pressing) { pressing = true; pressPos = pos; pressTime = Time.unscaledTime; pressOverUI = OverUI(pos); }
             else if (!down && pressing)
             {
                 pressing = false;
                 if (pressOverUI || (pos - pressPos).magnitude > 24f || Time.unscaledTime - pressTime > 0.45f) return;
-                var ray = cam.ScreenPointToRay(pos);
-                if (Physics.Raycast(ray, out var hit, maxTapDistance, Physics.DefaultRaycastLayers, QueryTriggerInteraction.Collide) && hit.collider.transform.IsChildOf(transform))
-                    StartCoroutine(Enter());
+                if (TappedPc(cam.ScreenPointToRay(pos))) StartCoroutine(Enter());
             }
+        }
+
+        /// Premier objet touché par le rayon, en ignorant le personnage (en vue 3e personne il peut être devant le PC).
+        bool TappedPc(Ray ray)
+        {
+            var hits = Physics.RaycastAll(ray, maxTapDistance, Physics.DefaultRaycastLayers, QueryTriggerInteraction.Collide);
+            System.Array.Sort(hits, (a, b) => a.distance.CompareTo(b.distance));
+            foreach (var h in hits)
+            {
+                if (player && h.collider.transform.IsChildOf(player.transform)) continue;
+                return h.collider.transform.IsChildOf(transform);
+            }
+            return false;
         }
 
         static bool OverUI(Vector2 p)

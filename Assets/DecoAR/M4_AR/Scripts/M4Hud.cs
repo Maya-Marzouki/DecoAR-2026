@@ -23,6 +23,7 @@ namespace DecoAR.AR
 
         RectTransform root, guide, badge, cta, message, tools;
         CanvasGroup guideGroup, ctaGroup, messageGroup, toolsGroup, fadeGroup;
+        int revealSteady;
         TextMeshProUGUI productText, sizeText, messageText, badgeText;
         GameObject variantTool, resetTool;
         DecoToast toast;
@@ -106,7 +107,7 @@ namespace DecoAR.AR
             }
             else sizeText.text = gate.Placement == PlacementType.Mur ? "Vise un mur bien éclairé" : "Vise le sol, bouge doucement le téléphone";
 
-            if (!leaving && fadeGroup.alpha > 0f) fadeGroup.alpha = Mathf.MoveTowards(fadeGroup.alpha, 0f, Time.unscaledDeltaTime * 2.5f);
+            if (!leaving) DecoUI.Reveal(fadeGroup, ref revealSteady);
             badgePop = Mathf.MoveTowards(badgePop, 0f, Time.unscaledDeltaTime * 3f);
             badge.localScale = Vector3.one * (1f + 0.45f * Mathf.Sin(badgePop * Mathf.PI) * badgePop);
             cta.localScale = Vector3.one * (showCta ? 1f + 0.02f * Mathf.Sin(Time.unscaledTime * 3f) : 0.96f);

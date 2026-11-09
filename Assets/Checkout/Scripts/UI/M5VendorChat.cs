@@ -27,7 +27,7 @@ namespace DecoAR.M5
         TextMeshProUGUI line, nameLabel;
         bool open, typing;
         Coroutine typeRoutine;
-        Vector2 pressPos; float pressTime; bool pressing;
+        Vector2 pressPos, lastTouch; float pressTime; bool pressing, touchPress;
         M5CheckoutUI.Product advice;
 
         struct Choice { public string label; public M5Icons.Kind icon; public Action action; }
@@ -69,10 +69,7 @@ namespace DecoAR.M5
         /// Toucher le vendeur ouvre aussi la discussion.
         void DetectVendorTap(Camera cam)
         {
-            Vector2 pos; bool down;
-            if (ETouch.activeTouches.Count > 0) { pos = ETouch.activeTouches[0].screenPosition; down = true; }
-            else if (Mouse.current != null) { pos = Mouse.current.position.ReadValue(); down = Mouse.current.leftButton.isPressed; }
-            else return;
+            if (!M5TouchTap.Read(ref touchPress, ref lastTouch, out var pos, out var down)) return;
             if (down && !pressing) { pressing = true; pressPos = pos; pressTime = Time.unscaledTime; return; }
             if (down || !pressing) return;
             pressing = false;

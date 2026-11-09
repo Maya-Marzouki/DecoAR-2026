@@ -29,6 +29,7 @@ namespace DecoAR.M3
         private ProductOption current;
         private int variantIndex;
         private bool leaving;
+        private int revealSteady;
 
         // Interface
         private RectTransform root, sheet, searchBar, strip, stripContent, tabsContent, badge, inspectHint;
@@ -51,6 +52,8 @@ namespace DecoAR.M3
                 Debug.LogError("[M3] M3ProductCatalog est manquant dans M3CatalogSelector.");
                 return;
             }
+            // Copie de travail : les produits générés (M6) s'y ajoutent sans jamais modifier le fichier du catalogue
+            catalog = Instantiate(catalog);
             DecoUI.EnsureEventSystem();
             BuildUI();
 
@@ -88,12 +91,47 @@ namespace DecoAR.M3
                     SelectProduct(previous, gm.SelectedVariantIndex);
             }
             else toast.Show("Touche un objet pour le voir de près", 3.5f);
+
+            // Produits générés en 3D par l'administration (M6) : ajoutés à leur rayon dès qu'ils sont chargés
+            M3GeneratedCatalog.Refresh(OnGeneratedLoaded);
+        }
+
+        private void OnGeneratedLoaded(List<ProductOption> added)
+        {
+            if (this == null || catalog == null) return;
+            // la liste suit l'administration : produits supprimés retirés, nouveaux ajoutés
+            catalog.products.RemoveAll(p => p != null && p.id.StartsWith("GEN-") && M3GeneratedCatalog.Get(p.id) == null);
+            int count = 0; bool inZone = false;
+            foreach (var p in M3GeneratedCatalog.Products)
+            {
+                if (catalog.Get(p.id) != null) continue;
+                catalog.products.Add(p);
+                count++;
+                if (p.category == category) inZone = true;
+            }
+            if (count == 0) return;
+            Debug.Log($"[M3] {count} produit(s) 3D généré(s) ajouté(s) au catalogue");
+
+            var gm = GameManager.Instance;
+            var selected = gm != null && gm.HasSelectedProduct ? catalog.Get(gm.SelectedProductId) : null;
+            if (selected != null && selected.id.StartsWith("GEN-") && current == null)
+            {
+                // retour de l'AR avec un produit généré : on le reprend
+                SelectProduct(selected, gm.SelectedVariantIndex);
+                return;
+            }
+            if (inZone && current == null)
+            {
+                ShowZone(category); // l'étagère et la liste du rayon ouvert se complètent
+                toast.Show($"Nouveau en 3D dans le rayon {category}", 3f, true);
+            }
         }
 
         private void OnDestroy()
         {
             var gm = GameManager.Instance;
             if (gm != null) gm.CartCountChanged -= RefreshCart;
+            if (catalog != null) Destroy(catalog); // copie de travail créée au démarrage
         }
 
         // ------------------------------------------------------------ zones
@@ -429,7 +467,7 @@ namespace DecoAR.M3
             searchBar.anchoredPosition = new Vector2(searchBar.anchoredPosition.x, Mathf.Lerp(searchBar.anchoredPosition.y, searchOpen ? -(Top + BarHeight + 16f) : -(Top + BarHeight - 20f), k));
             if (micBg != null && voice != null && voice.IsListening) micBg.color = Color.Lerp(DecoUI.Terracotta, DecoUI.Brass, 0.5f + 0.5f * Mathf.Sin(Time.unscaledTime * 6f));
 
-            if (!leaving && fadeGroup.alpha > 0f) fadeGroup.alpha = Mathf.MoveTowards(fadeGroup.alpha, 0f, Time.unscaledDeltaTime * 2.5f);
+            if (!leaving) DecoUI.Reveal(fadeGroup, ref revealSteady);
             badgePop = Mathf.MoveTowards(badgePop, 0f, Time.unscaledDeltaTime * 3f);
             badge.localScale = Vector3.one * (1f + 0.45f * Mathf.Sin(badgePop * Mathf.PI) * badgePop);
         }

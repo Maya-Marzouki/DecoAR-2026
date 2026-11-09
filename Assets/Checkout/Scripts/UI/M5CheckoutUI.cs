@@ -109,6 +109,7 @@ namespace DecoAR.M5
         static readonly string[] Titles = { "Suggestions", "Mon panier", "Réglages", "Profil" };
         CanvasGroup fadeGroup;
         bool leaving, cartSaved;
+        int revealSteady;
 
         void Start()
         {
@@ -128,7 +129,7 @@ namespace DecoAR.M5
             }
             if (imported > 0)
             {
-                Toast($"Votre panier : {imported} article{(imported > 1 ? "s" : "")} du catalogue. Passe au comptoir pour payer", 4.5f, true);
+                Toast($"Ton panier : {imported} article{(imported > 1 ? "s" : "")} du catalogue. Passe au comptoir pour payer", 4.5f, true);
                 badgePop = 1f;
                 M5ShopAudio.Item(0.2f);
             }
@@ -534,7 +535,7 @@ namespace DecoAR.M5
             dimGroup.alpha = Mathf.Lerp(dimGroup.alpha, open ? 1f : 0f, k);
             dimGroup.blocksRaycasts = open;
 
-            if (!leaving && fadeGroup && fadeGroup.alpha > 0f) fadeGroup.alpha = Mathf.MoveTowards(fadeGroup.alpha, 0f, Time.unscaledDeltaTime * 2.5f);
+            if (!leaving) DecoAR.UI.DecoUI.Reveal(fadeGroup, ref revealSteady);
             bool chipOn = Time.time < chipUntil;
             chipGroup.alpha = Mathf.Lerp(chipGroup.alpha, chipOn ? 1f : 0f, k);
             chip.anchoredPosition = new Vector2(0, Mathf.Lerp(chip.anchoredPosition.y, chipOn ? -DockTop : 10f, k));

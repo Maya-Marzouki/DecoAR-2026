@@ -62,6 +62,19 @@ namespace DecoAR.UI
             return safe;
         }
 
+        /// Fondu d'arrivée, à appeler chaque image : l'écran reste couvert tant que les premières images sont lentes
+        /// (chargement de la scène, compilation des shaders sur le téléphone), puis s'ouvre en douceur.
+        /// steady : compteur propre à l'écran qui l'appelle.
+        public static void Reveal(CanvasGroup g, ref int steady)
+        {
+            if (g == null || g.alpha <= 0f) return;
+            float dt = Time.unscaledDeltaTime;
+            bool early = Time.timeSinceLevelLoad < 2.5f; // au-delà, on ouvre quoi qu'il arrive
+            if (early && dt > 0.05f) { steady = 0; return; }
+            if (early && ++steady < 4) return;
+            g.alpha = Mathf.MoveTowards(g.alpha, 0f, Mathf.Min(dt, 1f / 30f) * 2.2f);
+        }
+
         /// Fondu de transition (lin 1000) avec le symbole DecoAR au centre. Alpha de départ = 1 : la scène apparaît en fondu.
         public static CanvasGroup Fade(RectTransform root)
         {
