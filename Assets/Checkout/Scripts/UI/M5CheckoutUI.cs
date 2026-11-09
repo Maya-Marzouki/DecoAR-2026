@@ -128,7 +128,7 @@ namespace DecoAR.M5
             }
             if (imported > 0)
             {
-                Toast($"Votre panier : {imported} article{(imported > 1 ? "s" : "")} du catalogue. Passe au comptoir pour payer", 4.5f, true);
+                Toast($"Ton panier : {imported} article{(imported > 1 ? "s" : "")} du catalogue. Passe au comptoir pour payer", 4.5f, true);
                 badgePop = 1f;
                 M5ShopAudio.Item(0.2f);
             }

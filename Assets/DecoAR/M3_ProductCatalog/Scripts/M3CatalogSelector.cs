@@ -51,6 +51,8 @@ namespace DecoAR.M3
                 Debug.LogError("[M3] M3ProductCatalog est manquant dans M3CatalogSelector.");
                 return;
             }
+            // Copie de travail : les produits générés (M6) s'y ajoutent sans jamais modifier le fichier du catalogue
+            catalog = Instantiate(catalog);
             DecoUI.EnsureEventSystem();
             BuildUI();
 
@@ -88,12 +90,47 @@ namespace DecoAR.M3
                     SelectProduct(previous, gm.SelectedVariantIndex);
             }
             else toast.Show("Touche un objet pour le voir de près", 3.5f);
+
+            // Produits générés en 3D par l'administration (M6) : ajoutés à leur rayon dès qu'ils sont chargés
+            M3GeneratedCatalog.Refresh(OnGeneratedLoaded);
+        }
+
+        private void OnGeneratedLoaded(List<ProductOption> added)
+        {
+            if (this == null || catalog == null) return;
+            // la liste suit l'administration : produits supprimés retirés, nouveaux ajoutés
+            catalog.products.RemoveAll(p => p != null && p.id.StartsWith("GEN-") && M3GeneratedCatalog.Get(p.id) == null);
+            int count = 0; bool inZone = false;
+            foreach (var p in M3GeneratedCatalog.Products)
+            {
+                if (catalog.Get(p.id) != null) continue;
+                catalog.products.Add(p);
+                count++;
+                if (p.category == category) inZone = true;
+            }
+            if (count == 0) return;
+            Debug.Log($"[M3] {count} produit(s) 3D généré(s) ajouté(s) au catalogue");
+
+            var gm = GameManager.Instance;
+            var selected = gm != null && gm.HasSelectedProduct ? catalog.Get(gm.SelectedProductId) : null;
+            if (selected != null && selected.id.StartsWith("GEN-") && current == null)
+            {
+                // retour de l'AR avec un produit généré : on le reprend
+                SelectProduct(selected, gm.SelectedVariantIndex);
+                return;
+            }
+            if (inZone && current == null)
+            {
+                ShowZone(category); // l'étagère et la liste du rayon ouvert se complètent
+                toast.Show($"Nouveau en 3D dans le rayon {category}", 3f, true);
+            }
         }
 
         private void OnDestroy()
         {
             var gm = GameManager.Instance;
             if (gm != null) gm.CartCountChanged -= RefreshCart;
+            if (catalog != null) Destroy(catalog); // copie de travail créée au démarrage
         }
 
         // ------------------------------------------------------------ zones

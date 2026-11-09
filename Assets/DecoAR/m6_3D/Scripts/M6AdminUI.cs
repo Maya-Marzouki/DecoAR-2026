@@ -51,7 +51,7 @@ namespace DecoAR.M6
         CanvasGroup toastGroup, emptyGroup, hintGroup, toolsGroup;
         Button generateButton, addButton;
         TextMeshProUGUI addLabel;
-        TMP_InputField nameField;
+        TMP_InputField nameField, priceField;
         RawImage photo;
         AspectRatioFitter photoFit;
         GameObject photoEmpty;
@@ -180,10 +180,14 @@ namespace DecoAR.M6
 
             Step(body, "3", "Ajouter au catalogue");
             nameField = TextField(body, "Nom du produit (ex. Fauteuil Lin)");
+            priceField = TextField(body, "Prix en TND (ex. 450)");
+            priceField.contentType = TMP_InputField.ContentType.DecimalNumber;
+            priceField.characterLimit = 8;
             var grid = new GameObject("Categories", typeof(RectTransform), typeof(GridLayoutGroup), typeof(LayoutElement)).GetComponent<RectTransform>();
             grid.SetParent(body, false);
             var gl = grid.GetComponent<GridLayoutGroup>(); gl.cellSize = new Vector2(170, 58); gl.spacing = new Vector2(10, 10); gl.constraint = GridLayoutGroup.Constraint.FixedColumnCount; gl.constraintCount = 3;
-            grid.GetComponent<LayoutElement>().preferredHeight = 126;
+            // les 10 rayons de la boutique : 4 lignes de 3
+            grid.GetComponent<LayoutElement>().preferredHeight = Mathf.CeilToInt(M6Catalog.Categories.Length / 3f) * 68f - 10f;
             foreach (var c in M6Catalog.Categories)
             {
                 string cat = c;
@@ -207,6 +211,7 @@ namespace DecoAR.M6
             {
                 var item = pendingView; pendingView = null;
                 nameField.text = item.name; category = item.category; RefreshChips();
+                if (item.price > 0) priceField.text = item.price.ToString("0", System.Globalization.CultureInfo.InvariantCulture);
                 added = true;
                 status.text = "Chargement du modèle…";
                 _ = modelViewer.LoadModel(item.Path);
@@ -226,11 +231,12 @@ namespace DecoAR.M6
             if (string.IsNullOrWhiteSpace(nameField.text)) { Toast("Donne un nom au produit"); nameField.Select(); return; }
             try
             {
-                var item = M6Catalog.Add(modelViewer.CurrentPath, nameField.text, category);
+                float.TryParse(priceField.text.Replace(',', '.'), System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out float price);
+                var item = M6Catalog.Add(modelViewer.CurrentPath, nameField.text, category, price);
                 added = true;
                 addButton.interactable = false; addLabel.text = "Ajouté au catalogue";
                 viewerTitle.text = item.name;
-                Toast($"« {item.name} » ajouté au catalogue ({item.category})");
+                Toast($"« {item.name} » est en boutique, rayon {item.category}");
             }
             catch (Exception e) { Toast("Ajout impossible : " + e.Message); }
         }

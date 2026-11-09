@@ -75,6 +75,8 @@ namespace DecoAR.AR
                 placementType = (PlacementType)(int)gm.SelectedProductPlacement;
                 VariantIndex = gm.SelectedVariantIndex;
                 if (catalog != null) Product = catalog.Get(gm.SelectedProductId);
+                // produit généré en 3D par l'administration (M6), absent du fichier du catalogue
+                if (Product == null) Product = M3GeneratedCatalog.Get(gm.SelectedProductId);
             }
             else if (catalog != null && catalog.Get(testProductId) is ProductOption test)
             {
