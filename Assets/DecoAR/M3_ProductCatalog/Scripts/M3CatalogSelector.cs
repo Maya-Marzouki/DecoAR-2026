@@ -29,6 +29,7 @@ namespace DecoAR.M3
         private ProductOption current;
         private int variantIndex;
         private bool leaving;
+        private int revealSteady;
 
         // Interface
         private RectTransform root, sheet, searchBar, strip, stripContent, tabsContent, badge, inspectHint;
@@ -466,7 +467,7 @@ namespace DecoAR.M3
             searchBar.anchoredPosition = new Vector2(searchBar.anchoredPosition.x, Mathf.Lerp(searchBar.anchoredPosition.y, searchOpen ? -(Top + BarHeight + 16f) : -(Top + BarHeight - 20f), k));
             if (micBg != null && voice != null && voice.IsListening) micBg.color = Color.Lerp(DecoUI.Terracotta, DecoUI.Brass, 0.5f + 0.5f * Mathf.Sin(Time.unscaledTime * 6f));
 
-            if (!leaving && fadeGroup.alpha > 0f) fadeGroup.alpha = Mathf.MoveTowards(fadeGroup.alpha, 0f, Time.unscaledDeltaTime * 2.5f);
+            if (!leaving) DecoUI.Reveal(fadeGroup, ref revealSteady);
             badgePop = Mathf.MoveTowards(badgePop, 0f, Time.unscaledDeltaTime * 3f);
             badge.localScale = Vector3.one * (1f + 0.45f * Mathf.Sin(badgePop * Mathf.PI) * badgePop);
         }
